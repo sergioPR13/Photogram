@@ -1,24 +1,26 @@
 class PostsController < ApplicationController
-
+    before_action :authenticate_user!
     before_action :set_post, only: [:show, :edit, :update, :destroy]
-
+    before_action :owned_post, only: [:edit, :update, :destroy]
+    
     def index
         @posts = Post.all
     end
 
     def new
-        @post = Post.new
+        @post = current_user.posts.build
     end
 
     def create
-        if @post = Post.create(post_params)
+        @post = current_user.posts.build(post_params)
+        if @post.save
             flash[:success] = "Tu post ha sido creado!"
             redirect_to posts_path
-    else
-      flash.now[:alert] = "El post no pudo ser creado! Por favor revisa el formulario."
-      render :new
+        else
+            flash.now[:alert] = "El post no pudo ser creado! Por favor revisa el formulario."
+            render :new
+        end
     end
-end
 
     def show
         @post = Post.find(params[:id])
@@ -45,6 +47,13 @@ end
       end
     
     private
+
+    def owned_post
+        unless current_user == @post.user
+          flash[:alert] = "No es tu post!"
+          redirect_to root_path
+        end
+      end
     
     def post_params
         params.require(:post).permit(:image, :caption)
