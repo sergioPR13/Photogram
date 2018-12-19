@@ -16,10 +16,14 @@ class CommentsController < ApplicationController
     end
 
     def destroy
-        @comment = @post.comments.find(params[:id])
-        @comment.destroy
-        flash[:success] = "Comentario borrado"
-        redirect_to root_path
+      @comment = @post.comments.find(params[:id])
+      if @comment.user_id == current_user.id
+        @comment.delete
+        respond_to do |format|
+          format.html { redirect_to root_path }
+          format.js
+        end
+      end
     end
 
     private
